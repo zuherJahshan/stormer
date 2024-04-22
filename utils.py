@@ -24,6 +24,7 @@ class MetricsLogger(keras.callbacks.Callback):
         else:
             self.file = None
 
+
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
         if self.new_file:
@@ -116,10 +117,10 @@ def print_enumerated_list(list_of_items, item_name="item"):
 
     # Print header
     print(f"Available {item_name}s:", flush=True)
-    print("-" * separator_length, flush=True)  # Adjust the total length of the separator line
+    print("_" * separator_length, flush=True)  # Adjust the total length of the separator line
     header_format = "| {0:<{index_width}} | {1:<{name_width}} |".format("Index", "Model Name", index_width=index_column_width, name_width=name_column_width)
     print(header_format)
-    print("|" + "-" * (index_column_width + 2) + "|" + "-" * (name_column_width + 2) + "|")
+    print("|" + "_" * (index_column_width + 2) + "|" + "_" * (name_column_width + 2) + "|")
     
     # Print each model name with its index
     for index, name in enumerate(list_of_items):
