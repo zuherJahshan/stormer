@@ -15,8 +15,6 @@ def get_time_steps(frame_length, frame_step, duration=DURATION):
 
 def get_audio_and_label(x, noise, version):
     audio, label = x
-    # the label is an int inside [0, 30]. Please convert it to a one-hot vector of size 31
-    audio = audio / (2 ** 15)
     
     return audio, noise, label
 
@@ -113,8 +111,8 @@ def add_time_shift_noise_and_align(audio, noise, label, max_shift_in_ms):
     if tf.shape(audio)[0] < DURATION:
         audio = tf.pad(audio, paddings=[[DURATION - tf.shape(audio)[0], 0]])
 
-    noise_redution_coefficient = 16
-    audio = audio[:DURATION] + (noise[:DURATION] / noise_redution_coefficient)
+    noise_redution_coefficient = 8
+    audio = (audio[:DURATION] + (noise[:DURATION] / noise_redution_coefficient)) / 2
     audio.set_shape((DURATION,))
 
     return audio, label
