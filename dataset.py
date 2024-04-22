@@ -1,80 +1,9 @@
 import tensorflow_datasets as tfds
 import tensorflow as tf
 import math
+
 from urban_sound_ds import get_background_noise_dataset
-
-labels_v1 = [
-    "yes",
-    "no",
-    "up",
-    "down",
-    "left",
-    "right",
-    "on",
-    "off",
-    "stop",
-    "go",
-    "zero",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "bed",
-    "bird",
-    "cat",
-    "dog",
-    "happy",
-    "house",
-    "marvin",
-    "sheila",
-    "tree",
-    "wow",
-    "_silence_"
-]
-
-labels_v2 = [
-    "yes",
-    "no",
-    "up",
-    "down",
-    "left",
-    "right",
-    "on",
-    "off",
-    "stop",
-    "go",
-    "zero",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "bed",
-    "bird",
-    "cat",
-    "dog",
-    "happy",
-    "house",
-    "marvin",
-    "sheila",
-    "tree",
-    "wow",
-    "backward",
-    "forward",
-    "follow",
-    "learn",
-    "visual",
-    "_silence_"
-]
+from speech_commands_v2_ds import get_datasets as sc_get_datasets
 
 FREQUENCY = 16_000
 DURATION = FREQUENCY # Which means 2 seconds
@@ -85,14 +14,9 @@ def get_time_steps(frame_length, frame_step, duration=DURATION):
 
 
 def get_audio_and_label(x, noise, version):
-    audio = tf.cast(x["audio"], tf.float32)
-    label = x["label"]
-    
+    audio, label = x
     # the label is an int inside [0, 30]. Please convert it to a one-hot vector of size 31
     audio = audio / (2 ** 15)
-
-
-    label = tf.one_hot(label, len(labels_v1 if version == 1 else labels_v2))
     
     return audio, noise, label
 
@@ -269,7 +193,7 @@ def get_datasets(
     **kwargs
 ):
     print(f"Loading dataset version {version}")
-    combined_ds = tfds.load(f'huggingface:speech_commands/v0.0{version}')
+    combined_ds = sc_get_datasets()
     print(f"Dataset loaded")
     return (
         get_tf_dataset(
@@ -292,10 +216,10 @@ def get_datasets(
         ),
         get_tf_dataset(
             tf.data.Dataset.zip(
-                combined_ds["validation"],
+                combined_ds["valid"],
                 get_background_noise_dataset(
                     "data/urban_sound",
-                    combined_ds["validation"].cardinality().numpy(),
+                    combined_ds["valid"].cardinality().numpy(),
                     probability_of_noise=0
                 )
             ),

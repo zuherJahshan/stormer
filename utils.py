@@ -39,9 +39,21 @@ def transfer(
     from_model: tf.keras.Model,
     to_model: tf.keras.Model,
 ):
-    for from_layer, to_layer in zip(from_model.layers, to_model.layers):
-        to_layer.set_weights(from_layer.get_weights())
-    return to_model
+    transfered_layers = []
+    for i, from_layer in enumerate(from_model.layers):
+        # check if the same kind of layer as the i'th layer of the current model
+        if isinstance(from_layer, to_model.layers[i].__class__):
+            # transfer weights
+            # check if the weights have the same shape
+            if len(from_layer.get_weights()) > 0 and \
+                not from_layer.get_weights()[0].shape == to_model.layers[i].get_weights()[0].shape:
+                break
+
+            to_model.layers[i].set_weights(from_layer.get_weights())
+            transfered_layers.append(from_layer.name)
+        else:
+            break
+    return to_model, transfered_layers
 
 
 def schedule(epoch, lr):
@@ -88,7 +100,7 @@ def get_model_path(model_name):
 
 def print_enumerated_list(list_of_items, item_name="item"):
     if not list_of_items:
-        print(f"No {item_name}s available.")
+        print(f"No {item_name}s available.", flush=True)
         return
     
     # Determine the maximum length of model names for proper alignment
@@ -103,8 +115,8 @@ def print_enumerated_list(list_of_items, item_name="item"):
     separator_length = 2 + index_column_width + 3 + name_column_width + 2  # Calculation of total separator length
 
     # Print header
-    print(f"Available {item_name}s:")
-    print("-" * separator_length)  # Adjust the total length of the separator line
+    print(f"Available {item_name}s:", flush=True)
+    print("-" * separator_length, flush=True)  # Adjust the total length of the separator line
     header_format = "| {0:<{index_width}} | {1:<{name_width}} |".format("Index", "Model Name", index_width=index_column_width, name_width=name_column_width)
     print(header_format)
     print("|" + "-" * (index_column_width + 2) + "|" + "-" * (name_column_width + 2) + "|")
@@ -115,4 +127,4 @@ def print_enumerated_list(list_of_items, item_name="item"):
         print(row_format)
     
     # Print closing line for the table
-    print("|" + "_" * (index_column_width + 2) + "|" + "_" * (name_column_width + 2) + "|")
+    print("|" + "_" * (index_column_width + 2) + "|" + "_" * (name_column_width + 2) + "|", flush=True)
