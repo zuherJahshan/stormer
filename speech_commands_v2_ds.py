@@ -5,7 +5,7 @@ import ds_utils
 import tensorflow as tf
 
 # datapath should point to the absolute path
-datapath = "data/speech_commands_v2"
+datapath = "data/speech-commands-v2"
 datapath = os.path.abspath(datapath)
 
 

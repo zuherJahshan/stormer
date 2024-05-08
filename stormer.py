@@ -236,6 +236,14 @@ class StormerRU(tf.keras.layers.Layer):
             trainable=initial_state_trainability,
             name='initial_state'
         )
+
+        self.initial_state = self.add_weight(
+            shape=(1, num_state_cells, projection_dim),
+            initializer='random_normal',
+            trainable=initial_state_trainability,
+            name='initial_state'
+        )
+
         # State TE layers
         self.calc_z = StateTransformerBlock(
             num_heads=num_heads,
@@ -270,25 +278,21 @@ class StormerRU(tf.keras.layers.Layer):
         batch_size = tf.shape(input_seq)[0]
         # Use the learnable initial state, replicate it for the whole batch
         state_t = tf.tile(self.initial_state, [batch_size, 1, 1])
-        
+
         folds = tf.shape(input_seq)[1]
-        states = tf.TensorArray(
-            tf.float32,
-            dynamic_size=True,
-            size=0
-        )
-        for fold in range(folds):
-            curr_input_seq = input_seq[:, fold, :, :]
+        states = []
+
+        for fold in range(4):
+            curr_input_seq = tf.gather(input_seq, fold, axis=1)
             z = self.calc_z(state_t, curr_input_seq)
             r = self.calc_r(state_t, curr_input_seq)
-            current_state = self.calc_current_state(r*state_t, curr_input_seq)
-            state_t = (1 - z)*state_t + z*current_state
-            states = states.write(fold, state_t)#.mark_used()
-        
-        return tf.transpose(
-            states.stack(),
-            [1, 0, 2, 3]
-        )
+            current_state = self.calc_current_state(r * state_t, curr_input_seq)
+            state_t = (1 - z) * state_t + z * current_state
+            states.append(state_t)
+
+        # change the dimensions 
+        return tf.transpose(tf.stack(states), [1, 0, 2, 3])
+
 
 
     def get_mac(self, seq_len):
@@ -366,12 +370,6 @@ class Stormer(tf.keras.models.Model):
         x = input_seq
         for itsru in self.itsrus:
             x = itsru(x)
-
-        # mix the states of the last timestep with the label token
-        # transform the label weight to the shape (batch_size, 1, projection_dim)
-        # label_token = tf.tile(self.label_token, [tf.shape(x)[0], 1, 1])
-        # x = self.mixer(label_token, x[:, -1, 0, :])
-        # x = tf.squeeze(x, axis=1)
 
         return self.classifier(x[:, -1, 0, :])
     

@@ -192,13 +192,14 @@ def get_datasets(
 ):
     print(f"Loading dataset version {version}")
     combined_ds = sc_get_datasets()
+    noise_datapath = "data/urbansound8k"
     print(f"Dataset loaded")
     return (
         get_tf_dataset(
             tf.data.Dataset.zip(
                 combined_ds["train"],
                 get_background_noise_dataset(
-                    "data/urban_sound",
+                    noise_datapath,
                     combined_ds["train"].cardinality().numpy(),
                     probability_of_noise=probability_of_noise
                 )
@@ -216,7 +217,7 @@ def get_datasets(
             tf.data.Dataset.zip(
                 combined_ds["valid"],
                 get_background_noise_dataset(
-                    "data/urban_sound",
+                    noise_datapath,
                     combined_ds["valid"].cardinality().numpy(),
                     probability_of_noise=0
                 )
@@ -234,7 +235,7 @@ def get_datasets(
             tf.data.Dataset.zip(
                 combined_ds["test"],
                 get_background_noise_dataset(
-                    "data/urban_sound",
+                    noise_datapath,
                     combined_ds["test"].cardinality().numpy(),
                     probability_of_noise=0
                 )

@@ -96,7 +96,7 @@ def get_model_name(
 
 
 def get_model_path(model_name):
-    return f"./models/{model_name}/{model_name}.ckpt"
+    return f"./models/{model_name}/{model_name}.weights.h5"
 
 
 def print_enumerated_list(list_of_items, item_name="item"):
