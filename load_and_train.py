@@ -5,22 +5,22 @@ import os
 import glob
 
 from dataset import get_datasets
-from stormer import Stormer
+from gated_stormer import Stormer
 
 # %%
 # print model names
 
 print_model_table = lambda model_list: utils.print_enumerated_list(model_list, "Model")
 
-models_names = [path.split("/")[-1] for path in glob.glob("models/stormer*")]
+models_names = [path.split("/")[-1] for path in glob.glob("models/*stormer*")]
 models_names.sort()
 print_model_table(models_names)
 model_name = models_names[0]
 
 # %%
 hps = utils.load_hps(model_name)
-# Change learning rate
-hps["weight_decay"] /= 50
+# Change HYPER PARAMETERS
+# hps["weight_decay"] /= 50
 utils.save_hps(model_name, hps)
 stormer = Stormer(**hps)
 

@@ -259,6 +259,17 @@ class StormerRU(tf.keras.layers.Layer):
             dropout=dropout,
             kernel_regularizer=kernel_regularizer,
         )
+        
+        self.passthrough = StateTransformerBlock(
+            num_heads=num_heads,
+            projection_dim=projection_dim,
+            inner_ff_dim=inner_ff_dim,
+            dropout=dropout,
+            kernel_regularizer=kernel_regularizer,
+        )
+
+        self.residual_add = tf.keras.layers.Add()
+        self.norm = tf.keras.layers.LayerNormalization(epsilon=1e-6)
 
 
     def set_initial_state_trainability(self, trainable):
@@ -277,10 +288,16 @@ class StormerRU(tf.keras.layers.Layer):
 
         for fold in range(4):
             curr_input_seq = tf.gather(input_seq, fold, axis=1)
+            # Calcualate the GRU-like gate output
             z = self.calc_z(state_t, curr_input_seq)
             r = self.calc_r(state_t, curr_input_seq)
             current_state = self.calc_current_state(r * state_t, curr_input_seq)
             state_t = (1 - z) * state_t + z * current_state
+            
+            # Add the gated input.
+            passthrough = self.passthrough(state_t, curr_input_seq)
+            state_t = self.residual_add([state_t, passthrough])
+            state_t = self.norm(state_t)
             states.append(state_t)
 
         # change the dimensions 
