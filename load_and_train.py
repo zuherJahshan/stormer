@@ -21,15 +21,9 @@ model_name = models_names[0]
 hps = utils.load_hps(model_name)
 # Change HYPER PARAMETERS
 # hps["weight_decay"] /= 50
+
 utils.save_hps(model_name, hps)
 stormer = Stormer(**hps)
-
-# %%
-# check if the model containing directory exists
-model_path = utils.get_model_path(model_name)
-load_weights = os.path.exists(os.path.dirname(model_path))
-if load_weights:
-    stormer.load_weights(model_path)
 
 # %%
 ## load the datasets
@@ -38,9 +32,16 @@ train, valid, test = get_datasets(
 )
 
 # %%
-# for layer in stormer.layers[:-1]:
-#     print(layer.name)
-#     layer.trainable = False
+# Build the stormer model
+for example, _ in train.take(1):
+    stormer(example)
+
+# %%
+# check if the model containing directory exists
+model_path = utils.get_model_path(model_name)
+load_weights = os.path.exists(os.path.dirname(model_path))
+if load_weights:
+    stormer.load_weights(model_path)
 
 # %%
 results_filename = f'data/results/{model_name}.csv'
