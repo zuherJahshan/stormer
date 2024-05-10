@@ -1,4 +1,5 @@
 # %%
+import configuration
 import tensorflow as tf
 import utils
 import os
@@ -15,12 +16,13 @@ print_model_table = lambda model_list: utils.print_enumerated_list(model_list, "
 models_names = [path.split("/")[-1] for path in glob.glob("models/*stormer*")]
 models_names.sort()
 print_model_table(models_names)
-model_name = models_names[0]
+model_name = models_names[1]
 
 # %%
 hps = utils.load_hps(model_name)
 # Change HYPER PARAMETERS
-# hps["weight_decay"] /= 50
+# hps["weight_decay"] /= 5
+# hps["learning_rate"] /= 2
 
 utils.save_hps(model_name, hps)
 stormer = Stormer(**hps)
@@ -42,6 +44,12 @@ model_path = utils.get_model_path(model_name)
 load_weights = os.path.exists(os.path.dirname(model_path))
 if load_weights:
     stormer.load_weights(model_path)
+
+# %%
+# make all layers except the last two non-trainable
+for layer in stormer.layers[:-2]:
+    layer.trainable = False
+
 
 # %%
 results_filename = f'data/results/{model_name}.csv'
